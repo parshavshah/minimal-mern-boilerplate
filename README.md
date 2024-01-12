@@ -1,4 +1,4 @@
-![Logo][![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&pause=1000&color=154A61&background=FF000000&center=true&vCenter=true&random=false&width=435&lines=MININAL+MERN+BOILERPLATE)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&pause=1000&color=154A61&background=FF000000&center=true&vCenter=true&random=false&width=435&lines=MININAL+MERN+BOILERPLATE)](https://git.io/typing-svg)
 
 # Minimal Mern Boilerplate
 
