@@ -7,7 +7,7 @@ exports.sendResponse = (res) => {
     res.code = 200;
   }
   res.status(res.code);
-  var responseData = {
+  const responseData = {
     data: res.data,
     message: res.message,
     status: res.code,

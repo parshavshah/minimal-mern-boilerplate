@@ -1,4 +1,4 @@
-var userModel = require("./user.model");
+const userModel = require("./user.model");
 
 exports.models = {
   userModel,

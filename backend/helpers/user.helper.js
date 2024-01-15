@@ -1,5 +1,4 @@
-var jwt = require('jsonwebtoken');
-require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const sendResponse = require('../utils').utils.response.sendResponse
 
 exports.authUser = async (req, res, next) => {
