@@ -54,7 +54,7 @@ exports.loginUser = async (req, res, next) => {
         {
           data: dbResponse,
         },
-        process.env.TOKEN_SECRET,
+        process.env.JWT_SECRET,
         {
           expiresIn: "10h",
         }
@@ -107,13 +107,13 @@ exports.registerUser = async (req, res) => {
     if (dbResponse) {
         
       // user created - send the success mail
-      await mail.sendMail({
-        to: body.email,
-        subject: `Welcome ${
-          dbResponse["firstName"] + " " + dbResponse["lastName"]
-        } to our TestWebsite.com`,
-        text: `Your Verification Code is ${dbResponse["verificationCode"]}, Please verify.`,
-      });
+      // await mail.sendMail({
+      //   to: body.email,
+      //   subject: `Welcome ${
+      //     dbResponse["firstName"] + " " + dbResponse["lastName"]
+      //   } to our TestWebsite.com`,
+      //   text: `Your Verification Code is ${dbResponse["verificationCode"]}, Please verify.`,
+      // });
 
       delete dbResponse["verificationCode"];
       res["data"] = dbResponse;

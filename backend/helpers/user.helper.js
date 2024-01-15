@@ -5,7 +5,7 @@ const sendResponse = require('../utils').utils.response.sendResponse
 exports.authUser = async (req, res, next) => {
     try {
         let curruntTime = +new Date();
-        jwt.verify(req.headers.authorization, process.env.TOKEN_SECRET, (error, decoded) => {
+        jwt.verify(req.headers.authorization, process.env.JWT_SECRET, (error, decoded) => {
             if (error) {
                 throw error;
             }

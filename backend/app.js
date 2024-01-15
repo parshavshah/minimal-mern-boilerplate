@@ -1,36 +1,46 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mongoose = require('mongoose');
-require('dotenv').config()
-var cors = require('cors');
+var createError = require("http-errors");
+var express = require("express");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
+var mongoose = require("mongoose");
+require("dotenv").config();
+var cors = require("cors");
 
-var indexRouter = require('./routes/index');
+var userRouter = require("./routes/user");
+var otherRouter = require("./routes/other");
 
 var app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "jade");
 
-app.use(logger('dev'));
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(cors())
+app.use(cors());
 
 // mongo connection
-mongoose.connect(process.env.DB_PATH, { useUnifiedTopology: true, useNewUrlParser: true });
-mongoose.connection.on('error', (error) => {
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,useUnifiedTopology: true 
+});
+mongoose.connection.on("error", (error) => {
   console.log("Connection error");
   console.log(error);
 });
 
-app.use('/', indexRouter);
+// check application health
+app.use("/health", function (req, res, next) {
+  res.send({ health: "ok" });
+});
+
+// application routes
+app.use("/api/v1", userRouter);
+app.use("/api/v1", otherRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -41,7 +51,7 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
   res.status(err.status || 500);

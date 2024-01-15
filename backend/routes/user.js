@@ -6,11 +6,6 @@ const validators = require("../validators").validators;
 
 const authUser = require("../helpers/user.helper").authUser;
 
-router.get("/", function (req, res, next) {
-  res.send({ ok: ok });
-});
-
-// --- user
 router.post("/user/login", controllers.userController.loginUser);
 
 router.post("/user/verify", controllers.userController.verifyUser);
@@ -26,3 +21,5 @@ router.get(
   authUser,
   controllers.userController.getUserProfile
 );
+
+module.exports = router;
