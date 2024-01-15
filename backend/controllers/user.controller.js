@@ -1,230 +1,226 @@
-const User = require("../models/user.model");
-const errorHendlerHelper = require("../helpers/errorHendlerHelper");
-const responseHelper = require("../helpers/responseHelper");
-const ErrorHelper = require("../helpers/errorHelper");
-const sendEmail = require("../helpers/emailHelper");
-const crypto = require("crypto");
+const hashPassword = require("password-hash");
+const jwt = require("jsonwebtoken");
+const _ = require("lodash");
+require("dotenv").config();
 
-// Register User
-exports.registerUser = errorHendlerHelper(async (req, res, next) => {
-  const { name, email, gender, password } = req.body;
+const utils = require("../utils").utils;
+const sendResponse = utils.response.sendResponse;
+const mail = utils.mail;
 
-  const user = await User.create({
-    name,
-    email,
-    gender,
-    password,
-    avatar: {
-      public_id: myCloud.public_id,
-      url: myCloud.secure_url,
-    },
-  });
+const userModel = require("../models").models.userModel;
 
-  responseHelper(user, 201, res);
-});
-
-// Login User
-exports.loginUser = errorHendlerHelper(async (req, res, next) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return next(new ErrorHelper("Please Enter Email And Password", 400));
-  }
-
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user) {
-    return next(new ErrorHelper("Invalid Email or Password", 401));
-  }
-
-  const isPasswordMatched = await user.comparePassword(password);
-
-  if (!isPasswordMatched) {
-    return next(new ErrorHelper("Invalid Email or Password", 401));
-  }
-
-  responseHelper(user, 201, res);
-});
-
-// Logout User
-exports.logoutUser = errorHendlerHelper(async (req, res, next) => {
-  res.cookie("token", null, {
-    expires: new Date(Date.now()),
-    httpOnly: true,
-  });
-
-  res.status(200).json({
-    success: true,
-    message: "Logged Out",
-  });
-});
-
-// Get User Details
-exports.getUserDetails = errorHendlerHelper(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-
-  res.status(200).json({
-    success: true,
-    user,
-  });
-});
-
-// Forgot Password
-exports.forgotPassword = errorHendlerHelper(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
-
-  if (!user) {
-    return next(new ErrorHelper("User Not Found", 404));
-  }
-
-  const resetToken = await user.getResetPasswordToken();
-
-  await user.save({ validateBeforeSave: false });
-
-  // const resetPasswordUrl = `${req.protocol}://${req.get("host")}/password/reset/${resetToken}`;
-  const resetPasswordUrl = `https://${req.get(
-    "host"
-  )}/password/reset/${resetToken}`;
-
-  // const message = `Your password reset token is : \n\n ${resetPasswordUrl}`;
-
+/**
+ * @name : loginUser
+ * @description : to login the user
+ */
+exports.loginUser = async (req, res, next) => {
   try {
-    await sendEmail({
-      email: user.email,
-      templateId: process.env.SENDGRID_RESET_TEMPLATEID,
-      data: {
-        reset_url: resetPasswordUrl,
-      },
-    });
+    let body = req.body;
+    console.log(req.body);
 
-    res.status(200).json({
-      success: true,
-      message: `Email sent to ${user.email} successfully`,
-    });
+    // find the user
+    let dbResponse = await userModel
+      .findOne({
+        email: body.username,
+      })
+      .exec()
+      .then((response) => {
+        return JSON.parse(JSON.stringify(response));
+      });
+
+    // check user is exist or not
+    if (!dbResponse) {
+      throw new Error("User not found");
+    }
+
+    // check password is right or not ?
+    if (hashPassword.verify(body.password, dbResponse["password"])) {
+      // check user is verified or not
+      if (dbResponse["status"] == 0) {
+        throw new Error("Your account is not verified yet");
+      }
+
+      dbResponse = _.omit(dbResponse, [
+        "password",
+        "__v",
+        "verificationCode",
+        "status",
+      ]);
+      dbResponse["name"] =
+        dbResponse["firstName"] + " " + dbResponse["lastName"];
+
+      // generate JWT token for authorization
+      dbResponse = jwt.sign(
+        {
+          data: dbResponse,
+        },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "10h",
+        }
+      );
+
+      res["data"] = dbResponse;
+      res["message"] = "Login success";
+      sendResponse(res);
+    } else {
+      throw new Error("Password is incorrect");
+    }
   } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save({ validateBeforeSave: false });
-    return next(new ErrorHelper(error.message, 500));
+    res.message = error.message;
+    res.code = 500;
+    res.data = error;
+    sendResponse(res);
   }
-});
+};
 
-// Reset Password
-exports.resetPassword = errorHendlerHelper(async (req, res, next) => {
-  // create hash token
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
+/**
+ * @name : registerUser
+ * @description : to register the user
+ */
+exports.registerUser = async (req, res) => {
+  try {
+    let body = req.body;
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+    // check that user already exist ?
+    let dbCountResponse = await userModel.count({
+      email: body["email"],
+    });
 
-  if (!user) {
-    return next(new ErrorHelper("Invalid reset password token", 404));
+    if (dbCountResponse > 0) {
+      throw new Error("User already exist");
+    }
+
+    // create user process
+    let dbResponse = await userModel.create(body).then((resultData) => {
+      resultData = JSON.parse(JSON.stringify(resultData));
+      resultData = _.omit(resultData, [
+        "password",
+        "role",
+        "__v",
+        "_id",
+        "status",
+      ]);
+      return resultData;
+    });
+
+    if (dbResponse) {
+        
+      // user created - send the success mail
+      await mail.sendMail({
+        to: body.email,
+        subject: `Welcome ${
+          dbResponse["firstName"] + " " + dbResponse["lastName"]
+        } to our TestWebsite.com`,
+        text: `Your Verification Code is ${dbResponse["verificationCode"]}, Please verify.`,
+      });
+
+      delete dbResponse["verificationCode"];
+      res["data"] = dbResponse;
+      res["message"] = "User created";
+    } else {
+      res["message"] = "Something went wrong, Please try again";
+    }
+
+    // Send the response
+    sendResponse(res);
+  } catch (error) {
+    res["message"] = error.message;
+    res["data"] = error;
+    res["code"] = 500;
+    sendResponse(res);
   }
+};
 
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
+/**
+ * @name : verifyUser
+ * @description : to verify the user from the app
+ */
+exports.verifyUser = async (req, res) => {
+  try {
+    let code = req.body.code;
+    let email = req.body.email;
 
-  await user.save();
-  responseHelper(user, 200, res);
-});
-
-// Update Password
-exports.updatePassword = errorHendlerHelper(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select("+password");
-
-  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
-
-  if (!isPasswordMatched) {
-    return next(new ErrorHelper("Old Password is Invalid", 400));
-  }
-
-  user.password = req.body.newPassword;
-  await user.save();
-  responseHelper(user, 201, res);
-});
-
-// Update User Profile
-exports.updateProfile = errorHendlerHelper(async (req, res, next) => {
-  const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
-  };
-
-  await User.findByIdAndUpdate(req.user.id, newUserData, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: true,
-  });
-
-  res.status(200).json({
-    success: true,
-  });
-});
-
-// ADMIN DASHBOARD
-
-// Get All Users --ADMIN
-exports.getAllUsers = errorHendlerHelper(async (req, res, next) => {
-  const users = await User.find();
-
-  res.status(200).json({
-    success: true,
-    users,
-  });
-});
-
-// Get Single User Details --ADMIN
-exports.getSingleUser = errorHendlerHelper(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
-
-  if (!user) {
-    return next(
-      new ErrorHelper(`User doesn't exist with id: ${req.params.id}`, 404)
+    let dbResponse = await userModel.findOne(
+      {
+        email: email,
+      },
+      {
+        _id: 0,
+        password: 0,
+        __v: 0,
+      }
     );
+
+    if (dbResponse) {
+      // check account is already verified or not
+      if (dbResponse["status"] == 1) {
+        throw new Error("Your account is already verified");
+      }
+
+      if (dbResponse["verificationCode"] == code) {
+        // Update the account status
+        await userModel.updateOne(
+          {
+            email: email,
+          },
+          {
+            status: 1,
+            verificationCode: undefined,
+          }
+        );
+
+        res["data"] = dbResponse;
+        res["message"] = "Your account is verified";
+        sendResponse(res);
+      } else {
+        throw new Error("Code is incorrect, Please check");
+      }
+    } else {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    res["message"] = error.message;
+    res["data"] = error;
+    res["code"] = 500;
+    sendResponse(res);
   }
+};
 
-  res.status(200).json({
-    success: true,
-    user,
-  });
-});
+/**
+ * @name : getUserProfile
+ * @description : to get user profile
+ */
+exports.getUserProfile = async (req, res) => {
+  try {
+    let userId = req.params.id;
 
-// Update User Role --ADMIN
-exports.updateUserRole = errorHendlerHelper(async (req, res, next) => {
-  const newUserData = {
-    name: req.body.name,
-    email: req.body.email,
-    gender: req.body.gender,
-    role: req.body.role,
-  };
-
-  await User.findByIdAndUpdate(req.params.id, newUserData, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
-
-  res.status(200).json({
-    success: true,
-  });
-});
-
-exports.deleteUser = errorHendlerHelper(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    return next(
-      new ErrorHelper(`User doesn't exist with id: ${req.params.id}`, 404)
+    let dbResponse = await userModel.findOne(
+      {
+        _id: userId,
+      },
+      {
+        password: 0,
+        __v: 0,
+        verificationCode: 0,
+        role: 0,
+        status: 0,
+      }
     );
+
+    if (dbResponse) {
+      res["data"] = dbResponse;
+      res["message"] = "User profile";
+      res["code"] = 200;
+
+      sendResponse(res);
+    } else {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    res["message"] = error.message;
+    res["data"] = error;
+    res["code"] = 500;
+    sendResponse(res);
   }
-  await user.remove();
-  res.status(200).json({
-    success: true,
-  });
-});
+};
