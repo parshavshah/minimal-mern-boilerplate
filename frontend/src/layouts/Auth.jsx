@@ -1,5 +1,7 @@
+import AlertMessage from "../components/AlertMessage";
+
 export default function Auth(props) {
-    console.log(props)
+  console.log(props);
   const { children } = props;
   return (
     <>
@@ -13,6 +15,10 @@ export default function Auth(props) {
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
             Sign in to your account
           </h2>
+        </div>
+
+        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <AlertMessage />
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
