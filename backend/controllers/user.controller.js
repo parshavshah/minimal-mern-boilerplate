@@ -37,7 +37,7 @@ exports.loginUser = async (req, res, next) => {
     if (hashPassword.verify(body.password, dbResponse["password"])) {
       // check user is verified or not
       if (dbResponse["status"] == 0) {
-        throw new Error("Your account is not verified yet");
+        // throw new Error("Your account is not verified yet");
       }
 
       dbResponse = _.omit(dbResponse, [

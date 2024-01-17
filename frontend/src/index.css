@@ -1,14 +1,4 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-
-.nav-link {
-  font-size: 20px !important;
-  color: #fff !important;
-}
-
-.navbar-brand{
-    font-size: 28px !important;
-}
-
-body{
-    font-size: 18px !important;
-}
