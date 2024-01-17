@@ -2,8 +2,8 @@ import React from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { registerUser } from "../actions/UserAction";
-import AlertMessage from "../components/AlertMessage";  
-
+import Notiflix from "notiflix";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -22,9 +22,10 @@ const SignupSchema = Yup.object().shape({
 });
 
 export default function Signup() {
+  const navigate = useNavigate();
+
   return (
     <>
-    
       <Formik
         initialValues={{
           firstName: "",
@@ -36,6 +37,13 @@ export default function Signup() {
         onSubmit={async (values) => {
           console.log("after submit :: ", values);
           await registerUser(values);
+          const a = Notiflix.Report.success(
+            "Register Success!",
+            "Your account has been created !",
+            "Ok",
+            { borderRadius: "6px" }
+          );
+          navigate("/login");
         }}
       >
         {({ errors, touched }) => (
@@ -121,6 +129,12 @@ export default function Signup() {
               >
                 Sign in
               </button>
+              <Link
+                to="/login"
+                className="mt-2 flex w-full justify-center rounded-md bg-white-600 px-3 py-1.5 text-sm font-semibold leading-6 #4f46e5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Already have an account ?
+              </Link>
             </div>
           </Form>
         )}

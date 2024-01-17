@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Login() {
   return (
     <>
@@ -48,6 +50,12 @@ export default function Login() {
           >
             Sign in
           </button>
+          <Link
+            to="/register"
+            className="mt-2 flex w-full justify-center rounded-md bg-white-600 px-3 py-1.5 text-sm font-semibold leading-6 #4f46e5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            Do not have an account ?
+          </Link>
         </div>
       </form>
     </>
