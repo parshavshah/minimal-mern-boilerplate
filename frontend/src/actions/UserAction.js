@@ -9,3 +9,12 @@ export async function registerUser(data) {
   };
   await post("/api/v1/user/register", preparedRequestData);
 }
+
+export async function loginUser(data) {
+  const preparedRequestData = {
+    username: data.username,
+    password: data.password,
+  };
+  const responseData = await post("/api/v1/user/login", preparedRequestData);
+  return responseData;
+}

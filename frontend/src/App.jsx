@@ -2,6 +2,7 @@ import Auth from "./layouts/Auth";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import Admin from "./layouts/Admin";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -17,6 +18,15 @@ export default function App(props) {
             <Auth>
               {" "}
               <Login />{" "}
+            </Auth>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <Auth>
+              {" "}
+              <ForgotPassword />{" "}
             </Auth>
           }
         />
