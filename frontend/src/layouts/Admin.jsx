@@ -35,11 +35,8 @@ function updateActive(currentPath) {
 }
 
 export default function Admin(props) {
-  console.log(props, "--props--");
   const { children, pageName } = props;
-
   console.log(location.pathname);
-
   updateActive(location.pathname);
 
   return (

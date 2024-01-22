@@ -49,6 +49,8 @@ exports.loginUser = async (req, res, next) => {
       dbResponse["name"] =
         dbResponse["firstName"] + " " + dbResponse["lastName"];
 
+      userId = dbResponse._id;
+
       // generate JWT token for authorization
       dbResponse = jwt.sign(
         {
@@ -60,7 +62,7 @@ exports.loginUser = async (req, res, next) => {
         }
       );
 
-      res["data"] = dbResponse;
+      res["data"] = { token: dbResponse, userId };
       res["message"] = "Login success";
       sendResponse(res);
     } else {
@@ -105,7 +107,6 @@ exports.registerUser = async (req, res) => {
     });
 
     if (dbResponse) {
-        
       // user created - send the success mail
       // await mail.sendMail({
       //   to: body.email,

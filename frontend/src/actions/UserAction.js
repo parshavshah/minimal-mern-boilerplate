@@ -1,4 +1,4 @@
-import { post } from "./CommonAction";
+import { post, get } from "./CommonAction";
 
 export async function registerUser(data) {
   const preparedRequestData = {
@@ -16,5 +16,10 @@ export async function loginUser(data) {
     password: data.password,
   };
   const responseData = await post("/api/v1/user/login", preparedRequestData);
-  return responseData;
+  return responseData.data;
+}
+
+export async function getProfileData(userId) {
+  const responseData = await get(`/api/v1/user/profile/${userId}`);
+  return responseData.data;
 }

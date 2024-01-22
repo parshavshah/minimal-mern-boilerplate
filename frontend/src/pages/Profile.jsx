@@ -1,8 +1,25 @@
+import React from "react";
+import { useEffect, useState } from "react";
+import { getProfileData } from "../actions/UserAction";
+
 export default function Dashboard() {
-    return (
-      <>
-        <h3>My Profile page content</h3>
-      </>
-    );
-  }
-  
+  const [profileData, setProfileData] = useState({});
+
+  useEffect(() => {
+    const userId = localStorage.getItem("currentUserId");
+    const fetchProfileData = async () => {
+      const response = await getProfileData(userId);
+      setProfileData(response.data);
+    };
+    if (Object.keys(profileData).length === 0) {
+      fetchProfileData();
+    }
+  });
+
+  return (
+    <>
+      <p>Name : {profileData.firstName + " " + profileData.lastName} </p>
+      <p>Email : {profileData.email} </p>
+    </>
+  );
+}

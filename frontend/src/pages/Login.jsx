@@ -27,6 +27,8 @@ export default function Signup() {
         onSubmit={async (values) => {
           console.log("after submit :: ", values);
           const apiResponse = await loginUser(values);
+          localStorage.setItem("userToken", apiResponse.data.token);
+          localStorage.setItem("currentUserId", apiResponse.data.userId);
           console.log("apiResponse::", apiResponse);
           Notiflix.Notify.success("Login Success!", { borderRadius: "6px" });
           navigate("/dashboard");
