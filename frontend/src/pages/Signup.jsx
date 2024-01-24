@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { registerUser } from "../actions/UserAction";
 import Notiflix from "notiflix";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -26,6 +27,9 @@ export default function Signup() {
 
   return (
     <>
+     <Helmet>
+          <title>MERN - Signup</title>
+        </Helmet>
       <Formik
         initialValues={{
           firstName: "",

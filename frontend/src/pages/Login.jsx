@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { loginUser } from "../actions/UserAction";
 import Notiflix from "notiflix";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 const SignupSchema = Yup.object().shape({
   username: Yup.string().email("Invalid email").required("Required"),
@@ -18,6 +19,9 @@ export default function Signup() {
 
   return (
     <>
+      <Helmet>
+        <title>MERN - Login</title>
+      </Helmet>
       <Formik
         initialValues={{
           username: "",

@@ -1,7 +1,7 @@
-import { Children, Fragment } from "react";
+import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 
 import AdminHeader from "../components/AdminHeader";
 
@@ -15,13 +15,18 @@ let navigation = [
   { name: "Dashboard", href: "/dashboard", current: true },
   { name: "Profile", href: "/profile" },
 ];
-const userNavigation = [
-  { name: "Your Profile", href: "/profile" },
-  { name: "Sign out", href: "/login" },
-];
+const userNavigation = [{ name: "Your Profile", href: "/profile" }];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
+}
+
+function logout() {
+  console.log("cccc");
+  localStorage.removeItem("currentUserId");
+  localStorage.removeItem("userToken");
+  const navigate = useNavigate();
+  navigate("/login");
 }
 
 function updateActive(currentPath) {
@@ -112,18 +117,34 @@ export default function Admin(props) {
                             {userNavigation.map((item) => (
                               <Menu.Item key={item.name}>
                                 {({ active }) => (
-                                  <a
-                                    href={item.href}
+                                  <Link
+                                    to={item.href}
                                     className={classNames(
                                       active ? "bg-gray-100" : "",
                                       "block px-4 py-2 text-sm text-gray-700"
                                     )}
                                   >
                                     {item.name}
-                                  </a>
+                                  </Link>
                                 )}
                               </Menu.Item>
                             ))}
+                            <Menu.Item key="Logout">
+                              <button
+                                onClick={() => {
+                                  console.log("cccc");
+                                  localStorage.removeItem("currentUserId");
+                                  localStorage.removeItem("userToken");
+                                  const navigate = useNavigate();
+                                  navigate("/login");
+                                }}
+                                className={classNames(
+                                  "block px-4 py-2 text-sm text-gray-700"
+                                )}
+                              >
+                                Logout
+                              </button>
+                            </Menu.Item>
                           </Menu.Items>
                         </Transition>
                       </Menu>
@@ -168,6 +189,18 @@ export default function Admin(props) {
                       {item.name}
                     </Disclosure.Button>
                   ))}
+
+                  <Disclosure.Button
+                    key="Logout"
+                    as="a"
+                    onClick={logout}
+                    className={classNames(
+                      "text-gray-300 hover:bg-gray-700 hover:text-white",
+                      "block rounded-md px-3 py-2 text-base font-medium"
+                    )}
+                  >
+                    Logout
+                  </Disclosure.Button>
                 </div>
                 <div className="border-t border-gray-700 pb-3 pt-4">
                   <div className="flex items-center px-5">
